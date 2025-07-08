@@ -25,16 +25,9 @@ tmpfs               tmpfs     348M  6.8M  342M   2% /run
 /dev/sda1           xfs       960M  460M  501M  48% /boot
 tmpfs               tmpfs     174M   36K  174M   1% /run/user/0
 
-04>> fsck -f /dev/mapper/vgname-lvname
+04>> e2fsck -f /dev/mapper/vgname-lvname
 
-fsck from util-linux 2.37.4
-e2fsck 1.46.5 (30-Dec-2021)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-/dev/mapper/vgname-lvname: 11/655360 files (0.0% non-contiguous), 63279/2619392 blocks
+
 
 05>> resize2fs -p /dev/mapper/vgname-lvname 2G
 
