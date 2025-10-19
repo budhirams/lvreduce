@@ -24,20 +24,7 @@ Password:
   0 partitions
   0 LVM physical volume whole disks
   2 LVM physical volumes
-[root@master ~]# lsblk
-NAME              MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
-sda                 8:0    0    40G  0 disk
-├─sda1              8:1    0     1G  0 part /boot
-└─sda2              8:2    0    39G  0 part
-  ├─cs-root       253:0    0    37G  0 lvm  /
-  └─cs-swap       253:1    0     2G  0 lvm  [SWAP]
-sdb                 8:16   0    10G  0 disk
-└─sdb1              8:17   0    10G  0 part
-  └─vgname-lvname 253:2    0     2G  0 lvm  /data
-sdc                 8:32   0     5G  0 disk
-sdd                 8:48   0    20G  0 disk
-sr0                11:0    1 158.7M  0 rom
-sr1                11:1    1  11.3G  0 rom
+
 [root@master ~]# lsblk
 NAME              MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 sda                 8:0    0    40G  0 disk
@@ -132,6 +119,11 @@ Disk /dev/mapper/vgname-lvname: 2 GiB, 2147483648 bytes, 4194304 sectors
 Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+
+
+
 [root@master ~]# fdisk /dev/sdd
 
 Welcome to fdisk (util-linux 2.37.4).
@@ -173,9 +165,7 @@ The partition table has been altered.
 Calling ioctl() to re-read partition table.
 Syncing disks.
 
-[root@master ~]# partprobe
-Warning: Unable to open /dev/sr0 read-write (Read-only file system).  /dev/sr0 has been opened read-only.
-Warning: Unable to open /dev/sr1 read-write (Read-only file system).  /dev/sr1 has been opened read-only.
+
 [root@master ~]# partprobe /dev/sdd
 [root@master ~]#
 [root@master ~]#
@@ -199,33 +189,57 @@ Disk identifier: 0x403c6116
 
 Device     Boot Start      End  Sectors Size Id Type
 /dev/sdd1        2048 41943039 41940992  20G 8e Linux LVM
+
+
+
+
 [root@master ~]# pvcreate /dev/sdd1
   Physical volume "/dev/sdd1" successfully created.
+
+
+
 [root@master ~]# pvs
   PV         VG     Fmt  Attr PSize   PFree
   /dev/sda2  cs     lvm2 a--  <39.00g      0
   /dev/sdb1  vgname lvm2 a--  <10.00g  <8.00g
   /dev/sdd1         lvm2 ---  <20.00g <20.00g
+
+
+
+
 [root@master ~]# vgcreate vg_app /dev/sdd1
   Volume group "vg_app" successfully created
+
+
+
 [root@master ~]# vgs
   VG     #PV #LV #SN Attr   VSize   VFree
   cs       1   2   0 wz--n- <39.00g      0
   vg_app   1   0   0 wz--n- <20.00g <20.00g
   vgname   1   1   0 wz--n- <10.00g  <8.00g
+
+
 [root@master ~]# pvs
   PV         VG     Fmt  Attr PSize   PFree
   /dev/sda2  cs     lvm2 a--  <39.00g      0
   /dev/sdb1  vgname lvm2 a--  <10.00g  <8.00g
   /dev/sdd1  vg_app lvm2 a--  <20.00g <20.00g
+
+
 [root@master ~]# lvcreate -L 7G -n lv_data vg_app
   Logical volume "lv_data" created.
+
+
 [root@master ~]# lvs
   LV      VG     Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
   root    cs     -wi-ao---- 36.98g
   swap    cs     -wi-ao---- <2.02g
   lv_data vg_app -wi-a-----  7.00g
   lvname  vgname -wi-ao----  2.00g
+
+
+
+
 [root@master ~]# lvdisplay
   --- Logical volume ---
   LV Path                /dev/vg_app/lv_data
@@ -297,8 +311,8 @@ Device     Boot Start      End  Sectors Size Id Type
 
 [root@master ~]#    #   Through lvdisplay you can find out exact "lv path"
 [root@master ~]#
-[root@master ~]# mkfs.ext
-mkfs.ext2  mkfs.ext3  mkfs.ext4
+
+
 [root@master ~]# mkfs.ext4 /dev/vg_app/lv_data
 mke2fs 1.46.5 (30-Dec-2021)
 Creating filesystem with 1835008 4k blocks and 458752 inodes
@@ -313,16 +327,23 @@ Writing superblocks and filesystem accounting information: done
 
 [root@master ~]# mkdir /data-1
 [root@master ~]# mount /dev/vg_app/lv_data /data-1
+
+
+
 [root@master ~]# df -h /data-1
 Filesystem                  Size  Used Avail Use% Mounted on
 /dev/mapper/vg_app-lv_data  6.8G   24K  6.5G   1% /data-1
-[root@master ~]#
-[root@master ~]#
-[root@master ~]# lvcreate -L 5G -n lv_data vg_app
-  Logical Volume "lv_data" already exists in volume group "vg_app"
+
+
+
+
+
 [root@master ~]# lvcreate -L 5G -n lv_app vg_app
   Logical volume "lv_app" created.
-[root@master ~]#
+
+
+
+
 [root@master ~]# lvs
   LV      VG     Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
   root    cs     -wi-ao---- 36.98g
@@ -330,6 +351,9 @@ Filesystem                  Size  Used Avail Use% Mounted on
   lv_app  vg_app -wi-a-----  5.00g
   lv_data vg_app -wi-ao----  7.00g
   lvname  vgname -wi-ao----  2.00g
+
+
+
 [root@master ~]# lvdisplay
   --- Logical volume ---
   LV Path                /dev/vg_app/lv_data
@@ -429,27 +453,26 @@ Creating journal (16384 blocks): done
 Writing superblocks and filesystem accounting information: done
 
 [root@master ~]# mkdir /data-2
-[root@master ~]# vim /etc/fstab
-[root@master ~]# vim /etc/fstab
+
+
 [root@master ~]# mount /dev/vg_app/lv_app /data-2
 mount: (hint) your fstab has been modified, but systemd still uses
        the old version; use 'systemctl daemon-reload' to reload.
-[root@master ~]# mount  /data-2
-mount: /data-2: /dev/mapper/vg_app-lv_app already mounted on /data-2.
-mount: (hint) your fstab has been modified, but systemd still uses
-       the old version; use 'systemctl daemon-reload' to reload.
-[root@master ~]# 'systemctl daemon-reload
-> ^C
-[root@master ~]# systemctl daemon-reload
-[root@master ~]# mount  /data-2
-mount: /data-2: /dev/mapper/vg_app-lv_app already mounted on /data-2.
+
+
+
+
 [root@master ~]# df -kh /data-2
 Filesystem                 Size  Used Avail Use% Mounted on
 /dev/mapper/vg_app-lv_app  4.9G   24K  4.6G   1% /data-2
+
+
+
 [root@master ~]# ls -l /dev/vg_app/lv_app
 lrwxrwxrwx. 1 root root 7 Jul  6 00:36 /dev/vg_app/lv_app -> ../dm-4
-[root@master ~]# ls -l /dev/mapper/vg_app/lv_app
-ls: cannot access '/dev/mapper/vg_app/lv_app': No such file or directory
+
+
+
 [root@master ~]# df -kh
 Filesystem                  Size  Used Avail Use% Mounted on
 devtmpfs                    4.0M     0  4.0M   0% /dev
@@ -462,6 +485,8 @@ tmpfs                       174M   36K  174M   1% /run/user/0
 tmpfs                       174M   36K  174M   1% /run/user/1004
 /dev/mapper/vg_app-lv_data  6.8G   24K  6.5G   1% /data-1
 /dev/mapper/vg_app-lv_app   4.9G   24K  4.6G   1% /data-2
+
+
 [root@master ~]# ls -l /dev/mapper/vg_app-lv_app
 lrwxrwxrwx. 1 root root 7 Jul  6 00:36 /dev/mapper/vg_app-lv_app -> ../dm-4
 [root@master ~]#
@@ -474,6 +499,8 @@ brw-rw----. 1 root disk 253, 4 Jul  6 00:36 /dev/dm-4
   cs       1   2   0 wz--n- <39.00g     0
   vg_app   1   2   0 wz--n- <20.00g <8.00g
   vgname   1   1   0 wz--n- <10.00g <8.00g
+
+
 [root@master ~]# lvcreate -L 8G -n lv_logs vg_app
   Volume group "vg_app" has insufficient free space (2047 extents): 2048 required.
 [root@master ~]#
@@ -950,9 +977,17 @@ brw-rw----. 1 root disk 253, 4 Jul  6 00:36 /dev/dm-4
   Free  PE / Size       2047 / <8.00 GiB
   VG UUID               bbq7cU-NrPw-5Car-1I3a-JyBE-UnTY-KbXWaD
 
+
+
+
+
 [root@master ~]# # Free  PE / Size       2047 / <8.00 GiB
 [root@master ~]# lvcreate -l 2047 -n lv_logs vg_app
   Logical volume "lv_logs" created.
+
+
+
+
 [root@master ~]# lvs
   LV      VG     Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
   root    cs     -wi-ao---- 36.98g
@@ -1051,6 +1086,9 @@ Disk /dev/mapper/vg_app-lv_logs: 8 GiB, 8585740288 bytes, 16769024 sectors
 Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+
 [root@master ~]# lsblk
 NAME               MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 sda                  8:0    0    40G  0 disk
@@ -1069,6 +1107,9 @@ sdd                  8:48   0    20G  0 disk
   └─vg_app-lv_logs 253:5    0     8G  0 lvm
 sr0                 11:0    1 158.7M  0 rom
 sr1                 11:1    1  11.3G  0 rom
+
+
+
 [root@master ~]# lsblk -m
 NAME                 SIZE OWNER GROUP MODE
 sda                   40G root  disk  brw-rw----
@@ -1136,17 +1177,20 @@ The partition table has been altered.
 Calling ioctl() to re-read partition table.
 Syncing disks.
 
-[root@master ~]# partprobe /dev/sdc1
-Error: Partition(s) 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 on /dev/sdc1 have been written, but we have been unable to inform the kernel of the change, probably because it/they are in use.  As a result, the old partition(s) will remain in use.  You should reboot now before making further changes.
+ 
 [root@master ~]# partprobe /dev/sdc
 [root@master ~]#
-[root@master ~]# pvcreate /dev/sdc
-  Cannot use /dev/sdc: device is partitioned
+
+
 [root@master ~]# pvcreate /dev/sdc1
   Physical volume "/dev/sdc1" successfully created.
+
+
 [root@master ~]# vgextend vg_app /dev/sdc1
   Volume group "vg_app" successfully extended
-[root@master ~]#
+
+
+
 [root@master ~]# vgs
   VG     #PV #LV #SN Attr   VSize   VFree
   cs       1   2   0 wz--n- <39.00g     0
@@ -1155,9 +1199,6 @@ Error: Partition(s) 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1
 [root@master ~]#
 [root@master ~]#
 [root@master ~]#
-[root@master ~]# pvc
-bash: pvc: command not found...
-Similar command is: 'pvs'
 [root@master ~]# pvs
   PV         VG     Fmt  Attr PSize   PFree
   /dev/sda2  cs     lvm2 a--  <39.00g     0
